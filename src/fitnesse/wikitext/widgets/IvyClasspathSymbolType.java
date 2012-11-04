@@ -10,8 +10,6 @@ import org.apache.ivy.core.report.ArtifactDownloadReport;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.settings.IvySettings;
-import org.apache.ivy.util.DefaultMessageLogger;
-import org.apache.ivy.util.Message;
 import org.apache.ivy.util.url.CredentialsStore;
 import org.apache.ivy.util.url.URLHandler;
 import org.apache.ivy.util.url.URLHandlerDispatcher;
@@ -154,7 +152,7 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 	}
 
     private static void initMessage(Ivy ivy) {
-            ivy.getLoggerEngine().pushLogger(new DefaultMessageLogger(Message.MSG_DEBUG));
+            ivy.getLoggerEngine().pushLogger(new IvyClasspathMessageLogger());
     }
 
     private static IvySettings initSettings(Ivy ivy, Symbol symbol)

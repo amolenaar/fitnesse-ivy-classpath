@@ -57,4 +57,41 @@ public class IvyClasspathSymbolTypeTest {
     	}
     }
 
+    @Test
+    public void testIvyParsingWithConfigurations() throws IvyClasspathException {
+    	Symbol symbol = new Symbol(symbolType);
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default,test");
+
+    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	assertEquals(5, classpath.size());
+    	for (File f: classpath) {
+    		System.out.println(f.getAbsolutePath());
+    	}
+    }
+
+    @Test
+    public void testIvyParsingWithOneConfiguration() throws IvyClasspathException {
+    	Symbol symbol = new Symbol(symbolType);
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default");
+
+    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	assertEquals(2, classpath.size());
+    	for (File f: classpath) {
+    		System.out.println(f.getAbsolutePath());
+    	}
+    }
+
+    @Test
+    public void testIvyParsingWithSettings() throws IvyClasspathException {
+    	Symbol symbol = new Symbol(symbolType);
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.IVYSETTINGS_XML.name(), "ivysettings-test.xml");
+
+    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	assertEquals(5, classpath.size());
+    	for (File f: classpath) {
+    		System.out.println(f.getAbsolutePath());
+    	}
+    }
+
+
 }
