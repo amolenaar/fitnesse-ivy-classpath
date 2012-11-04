@@ -62,7 +62,7 @@ public class IvyClasspathSymbolTypeTest {
     	Symbol symbol = new Symbol(symbolType);
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default,test");
 
-    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	List<File> classpath = symbolType.getClasspathElements(symbol);
     	assertEquals(5, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
@@ -74,7 +74,7 @@ public class IvyClasspathSymbolTypeTest {
     	Symbol symbol = new Symbol(symbolType);
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default");
 
-    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	List<File> classpath = symbolType.getClasspathElements(symbol);
     	assertEquals(2, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
@@ -86,12 +86,38 @@ public class IvyClasspathSymbolTypeTest {
     	Symbol symbol = new Symbol(symbolType);
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.IVYSETTINGS_XML.name(), "ivysettings-test.xml");
 
-    	 List<File> classpath = symbolType.getClasspathElements(symbol);
+    	List<File> classpath = symbolType.getClasspathElements(symbol);
     	assertEquals(5, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
     	}
     }
 
+    @Test
+    public void testIvyParsingOfPomFile() throws IvyClasspathException {
+    	Symbol symbol = new Symbol(symbolType);
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.IS_POM_XML.name(), "true");
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.DEPENDENCY_FILE.name(), "pom-test.xml");
+
+    	List<File> classpath = symbolType.getClasspathElements(symbol);
+    	assertEquals(3, classpath.size());
+    	for (File f: classpath) {
+    		System.out.println(f.getAbsolutePath());
+    	}
+    }
+
+    @Test
+    public void testIvyParsingOfPomFileWithConfigurations() throws IvyClasspathException {
+    	Symbol symbol = new Symbol(symbolType);
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.IS_POM_XML.name(), "true");
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.DEPENDENCY_FILE.name(), "pom-test.xml");
+    	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "compile");
+
+    	List<File> classpath = symbolType.getClasspathElements(symbol);
+    	assertEquals(1, classpath.size());
+    	for (File f: classpath) {
+    		System.out.println(f.getAbsolutePath());
+    	}
+    }
 
 }

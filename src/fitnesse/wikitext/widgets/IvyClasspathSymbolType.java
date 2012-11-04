@@ -6,10 +6,12 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.ivy.Ivy;
+import org.apache.ivy.core.module.descriptor.ModuleDescriptor;
 import org.apache.ivy.core.report.ArtifactDownloadReport;
 import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.settings.IvySettings;
+import org.apache.ivy.plugins.parser.m2.PomModuleDescriptorParser;
 import org.apache.ivy.util.url.CredentialsStore;
 import org.apache.ivy.util.url.URLHandler;
 import org.apache.ivy.util.url.URLHandlerDispatcher;
@@ -42,9 +44,10 @@ import fitnesse.wikitext.parser.Translator;
 public class IvyClasspathSymbolType extends SymbolType implements Rule, Translation, PathsProvider {
 
 	enum OptionType {
-		IVY_XML,
+		DEPENDENCY_FILE,
 		IVYSETTINGS_XML,
-		CONFIGURATION
+		CONFIGURATION,
+		IS_POM_XML
 	};
 
 	static class Report {
@@ -85,7 +88,7 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 
 	@Override
 	public Maybe<Symbol> parse(Symbol symbol, Parser parser) {
-		OptionType nextOption = OptionType.IVY_XML;
+		OptionType nextOption = OptionType.DEPENDENCY_FILE;
 
         Symbol body = parser.parseToEnd(SymbolType.Newline);
         for (Symbol option: body.getChildren()) {
@@ -95,9 +98,11 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
             	nextOption = OptionType.IVYSETTINGS_XML;
             } else if ("-c".equals(option.getContent())) {
             	nextOption = OptionType.CONFIGURATION;
+            } else if ("-pom".equals(option.getContent())) {
+            	symbol.putProperty(OptionType.IS_POM_XML.name(), "true");
             } else {
             	symbol.putProperty(nextOption.name(), option.getContent());
-            	nextOption = OptionType.IVY_XML;
+            	nextOption = OptionType.DEPENDENCY_FILE;
             }
         }
 
@@ -110,10 +115,9 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
         IvySettings settings = initSettings(ivy, symbol);
         ivy.pushContext();
 
-        String[] confs;
-        confs = getConfigurations(symbol);
+        String[] confs = getConfigurations(symbol);
 
-        File ivyfile = new File(settings.substitute(symbol.getProperty(OptionType.IVY_XML.name(), "ivy.xml")));
+        File ivyfile = new File(settings.substitute(symbol.getProperty(OptionType.DEPENDENCY_FILE.name(), "ivy.xml")));
         if (!ivyfile.exists()) {
         	throw new IvyClasspathException("Ivy file not found: " + ivyfile);
         } else if (ivyfile.isDirectory()) {
@@ -125,7 +129,12 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
                 .setValidate(true);
         ResolveReport report;
 		try {
-			report = ivy.resolve(ivyfile.toURI().toURL(), resolveOptions);
+			if (symbol.hasProperty(OptionType.IS_POM_XML.name())) {
+				ModuleDescriptor md =  PomModuleDescriptorParser.getInstance().parseDescriptor(ivy.getSettings(), ivyfile.toURL(), true);
+				report = ivy.resolve(md, resolveOptions);
+			} else {
+				report = ivy.resolve(ivyfile.toURI().toURL(), resolveOptions);
+			}
 		} catch (Exception e) {
 			throw new IvyClasspathException("Unable to resolve dependencies for file " + ivyfile.getAbsolutePath(), e);
 		}
