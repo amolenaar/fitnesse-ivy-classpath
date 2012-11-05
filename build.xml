@@ -78,6 +78,14 @@
 		<jar jarfile="dist/fitnesse-ivy-classpath-javadoc.jar" basedir="javadoc" />
 	</target>
 
+	<target name="pom" depends="resolve">
+		<ivy:deliver deliverpattern="dist/ivy.xml" status="release" />
+		<ivy:makepom ivyfile="${basedir}/dist/ivy.xml" templatefile="pom.xml.template" pomfile="${basedir}/dist/fitnesse-ivy-classpath.pom" conf="default,test">
+			   <mapping conf="default" scope="compile"/>
+			   <mapping conf="test" scope="test"/>
+		</ivy:makepom>
+	</target>
+
 	<!-- 
 		Dependency resolution
 	 -->
@@ -94,14 +102,6 @@
 		<ivy:retrieve pattern="lib/[artifact].[ext]" />
 	</target>
 	
-	<target name="pom" depends="resolve">
-		<ivy:deliver deliverpattern="dist/ivy.xml" status="release" />
-		<ivy:makepom ivyfile="${basedir}/dist/ivy.xml" templatefile="pom.xml.template" pomfile="${basedir}/dist/fitnesse-ivy-classpath.pom" conf="default,test">
-			   <mapping conf="default" scope="compile"/>
-			   <mapping conf="test" scope="test"/>
-		</ivy:makepom>
-	</target>
-
 	<target name="snapshot" depends="resolve,pom">
 		<ivy:publish resolver="sonatype-nexus-snapshots"
 			publishivy="false">
