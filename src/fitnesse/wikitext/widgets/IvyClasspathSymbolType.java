@@ -13,10 +13,6 @@ import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.settings.IvySettings;
 import org.apache.ivy.plugins.parser.m2.PomModuleDescriptorParser;
-import org.apache.ivy.util.url.CredentialsStore;
-import org.apache.ivy.util.url.URLHandler;
-import org.apache.ivy.util.url.URLHandlerDispatcher;
-import org.apache.ivy.util.url.URLHandlerRegistry;
 
 import util.Maybe;
 import fitnesse.wikitext.parser.Matcher;
@@ -207,7 +203,6 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
             throws IvyClasspathException {
         IvySettings settings = ivy.getSettings();
         settings.addAllVariables(System.getProperties());
-        configureURLHandler(null, null, null, null);
 
         String settingsPath = symbol.getProperty(OptionType.IVYSETTINGS_XML.name());
         if ("".equals(settingsPath)) {
@@ -230,16 +225,5 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 			}
         }
         return settings;
-    }
-
-    private static void configureURLHandler(String realm, String host, String username,
-            String passwd) {
-        CredentialsStore.INSTANCE.addCredentials(realm, host, username, passwd);
-
-        URLHandlerDispatcher dispatcher = new URLHandlerDispatcher();
-        URLHandler httpHandler = URLHandlerRegistry.getHttp();
-        dispatcher.setDownloader("http", httpHandler);
-        dispatcher.setDownloader("https", httpHandler);
-        URLHandlerRegistry.setDefault(dispatcher);
     }
 }
