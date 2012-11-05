@@ -5,19 +5,39 @@
 	<property name="src" location="src" />
 	<property name="classes" location="classes" />
 	<property name="fitnesseRoot" value="FitNesseRoot" />
-	<property name="results.dir" location="test-results" />
-
+    <property name="port" value="8002" />
+    
 	<target name="build" depends="clean, compile" description="clean, then compile the source" />
 
-	<zipfileset id="wikipages.fileset" prefix="Resources/FitNesseRoot" dir="FitNesseRoot">
-		<include name="FitNesse/**" />
-		<include name="FrontPage/**" />
-		<include name="PageHeader/**" />
-		<include name="PageFooter/**" />
-		<exclude name="**/*.zip" />
-	</zipfileset>
+    <target name="compile" depends="resolve" description="compile the source (make)">
+        <mkdir dir="${classes}" />
+        <javac srcdir="src" destdir="${classes}" classpathref="classpath" debug="true" source="1.6" target="1.6" />
+    </target>
 
+    <target name="clean" description="delete everything in the classes directory">
+        <delete dir="${classes}" />
+        <delete dir="test-results" />
+        <delete dir="lib" />
+        <delete dir="dist" />
+        <delete dir="javadoc" />
+    </target>
 
+    <target name="test" depends="compile" description="run the unit tests">
+        <mkdir dir="test-results" />
+        <junit forkmode="once" fork="yes" printsummary="no" haltonfailure="yes" haltonerror="yes" dir="${basedir}">
+            <classpath refid="classpath" />
+            <formatter type="xml" usefile="true" />
+            <formatter type="plain" usefile="false" />
+        </junit>
+    </target>
+
+    <target name="run" depends="test" description="start FitNesse">
+        <java classpathref="classpath" classname="fitnesseMain.FitNesseMain" fork="true" failonerror="true">
+            <arg value="-p" />
+            <arg value="${port}" />
+        </java>
+    </target>
+	
 	<!--
 	  Bundling
 	  -->
@@ -45,7 +65,7 @@
 	</target>
 
 	<target name="sources-jar">
-		<jar jarfile="dist/fitnesse-sources.jar" basedir="src">
+		<jar jarfile="dist/fitnesse-ivy-classpath-sources.jar" basedir="src">
 			<include name="**" />
 			<zipfileset refid="wikipages.fileset" />
 		</jar>
@@ -54,36 +74,13 @@
 	<target name="javadoc-jar" depends="compile">
 		<mkdir dir="javadoc" />
 		<javadoc sourcepath="src" destdir="javadoc" classpathref="classpath" />
-		<jar jarfile="dist/fitnesse-javadoc.jar" basedir="javadoc" />
+		<jar jarfile="dist/fitnesse-ivy-classpath-javadoc.jar" basedir="javadoc" />
 
 	</target>
 
-	<target name="compile" depends="resolve" description="compile the source (make)">
-		<mkdir dir="${classes}" />
-		<javac srcdir="src" destdir="${classes}" classpathref="classpath" debug="true" source="1.6" target="1.6" />
-	</target>
-
-	<target name="clean" description="delete everything in the classes directory">
-		<delete dir="${classes}" />
-		<delete dir="test-results" />
-		<delete dir="lib" />
-		<delete dir="dist" />
-		<delete dir="javadoc" />
-	</target>
-
-	<target name="test" depends="compile" description="run the unit tests">
-		<mkdir dir="test-results" />
-		<junit forkmode="once" fork="yes" printsummary="no" haltonfailure="yes" haltonerror="yes" dir="${basedir}">
-			<classpath refid="classpath" />
-			<formatter type="xml" usefile="true" />
-			<formatter type="plain" usefile="false" />
-		</junit>
-	</target>
-
-	<target name="retrieve" depends="resolve" description="Copy dependencies to lib/, mainly for IDE's">
-		<ivy:retrieve pattern="lib/[artifact].[ext]" />
-	</target>
-	
+    <!-- 
+      Dependency resolution
+     -->
 	<target name="resolve" depends="ivy-init">
 		<ivy:resolve />
 		<ivy:cachepath pathid="lib.classpath" />
@@ -93,6 +90,10 @@
 		</path>
 	</target>
 
+    <target name="retrieve" depends="resolve" description="Copy dependencies to lib/, mainly for IDE's">
+        <ivy:retrieve pattern="lib/[artifact].[ext]" />
+    </target>
+    
 	<target name="pom" depends="resolve">
 		<ivy:deliver deliverpattern="dist/ivy.xml" status="release" />
 		<ivy:makepom ivyfile="${basedir}/dist/ivy.xml" templatefile="templates/pom.xml.template" pomfile="${basedir}/dist/fitnesse.pom" conf="default,test">
