@@ -5,7 +5,10 @@ import java.util.List;
 
 import util.StringUtil;
 
-public class IvyClasspathException extends Exception {
+/**
+ * Custom exception class.
+ */
+class IvyClasspathException extends Exception {
 	private static final long serialVersionUID = 1L;
 	private List<String> problems;
 

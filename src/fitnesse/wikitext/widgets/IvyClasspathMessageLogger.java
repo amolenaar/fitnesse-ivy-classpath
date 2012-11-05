@@ -3,7 +3,10 @@ package fitnesse.wikitext.widgets;
 import org.apache.ivy.util.AbstractMessageLogger;
 import org.apache.ivy.util.Message;
 
-public class IvyClasspathMessageLogger extends AbstractMessageLogger {
+/**
+ * A simplified message logger. It's not as verbose as the default message loggers.
+ */
+class IvyClasspathMessageLogger extends AbstractMessageLogger {
     private int level = Message.MSG_WARN;
 
     /**
