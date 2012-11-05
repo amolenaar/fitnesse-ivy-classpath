@@ -3,7 +3,7 @@
 	xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
 	<info organisation="org.fitnesse.plugins"
 		module="fitnesse-ivy-classpath"
-		revision="0.1">
+		revision="0.2">
 		<license name="Apache License version 2.0"
 			url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
 		<description homepage="http://fitnesse.org">
