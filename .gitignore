@@ -3,6 +3,8 @@
 antlib/
 classes/
 lib/
+dist/
+javadoc/
 FitNesseRoot/FitNesse/
 FitNesseRoot/PageFooter/
 FitNesseRoot/PageHeader/
