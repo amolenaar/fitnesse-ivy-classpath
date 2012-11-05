@@ -51,7 +51,8 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 		DEPENDENCY_FILE,
 		IVYSETTINGS_XML,
 		CONFIGURATION,
-		IS_POM_XML
+		IS_POM_XML,
+		PARSE_ERROR
 	};
 
 	static class Report {
@@ -102,24 +103,29 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
         }
         buf.append(":</p><ul class='meta'>");
 
-        try {
- 			for (File dep: getClasspathElements(symbol)) {
- 				buf.append("<li>")
- 					.append(dep.getAbsolutePath())
- 					.append("</li>");
- 			}
- 		} catch (IvyClasspathException e) {
- 			for (String problem: e.getProblems()) {
- 				buf.append("<li class='error'>ERROR:")
- 					.append(problem)
- 					.append("</li>");
- 			}
- 		} catch (Exception e) {
- 			buf.append("<li>ERROR:")
-				.append(e.getMessage())
+        if (symbol.hasProperty(OptionType.PARSE_ERROR.name())) {
+ 			buf.append("<li class='error'>")
+				.append(symbol.getProperty(OptionType.PARSE_ERROR.name()))
 				.append("</li>");
- 		}
-
+        } else {
+	        try {
+	 			for (File dep: getClasspathElements(symbol)) {
+	 				buf.append("<li>")
+	 					.append(dep.getAbsolutePath())
+	 					.append("</li>");
+	 			}
+	 		} catch (IvyClasspathException e) {
+	 			for (String problem: e.getProblems()) {
+	 				buf.append("<li class='error'>ERROR:")
+	 					.append(problem)
+	 					.append("</li>");
+	 			}
+	 		} catch (Exception e) {
+	 			buf.append("<li>ERROR:")
+					.append(e.getMessage())
+					.append("</li>");
+	 		}
+        }
         buf.append("</ul>");
         return buf.toString();
 	}
@@ -140,7 +146,8 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
             	symbol.putProperty(OptionType.IS_POM_XML.name(), "true");
             } else {
             	if (symbol.hasProperty(nextOption.name())) {
-            		// Deal with this
+            		symbol.putProperty(OptionType.PARSE_ERROR.name(), "Syntax error: Configuration option " + nextOption.name() + " is already defined.");
+            		break;
             	}
             	symbol.putProperty(nextOption.name(), option.getContent());
             	nextOption = OptionType.DEPENDENCY_FILE;

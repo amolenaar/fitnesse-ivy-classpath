@@ -36,3 +36,15 @@ Shows all 5 dependencies?
 !resolve badfile.xml
 }}}
 !resolve badfile.xml
+
+!2 A parse error
+{{{
+!resolve -c default -c test
+}}}
+!resolve -c default -c test
+
+!2 A parse error, again
+{{{
+!resolve ivy.xml badfile.xml
+}}}
+!resolve ivy.xml badfile.xml
