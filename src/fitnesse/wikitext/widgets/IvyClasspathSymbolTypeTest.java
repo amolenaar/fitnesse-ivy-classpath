@@ -24,9 +24,9 @@ public class IvyClasspathSymbolTypeTest {
 
     @Test
     public void parsesIvy() throws Exception {
-        ParserTestHelper.assertParses("!ivy", "SymbolList[IvyClasspathSymbolType]");
-        ParserTestHelper.assertParses("!ivy -s mysettings.xml", "SymbolList[IvyClasspathSymbolType]");
-        ParserTestHelper.assertParses("!ivy -c config1,config2 ivy.xml", "SymbolList[IvyClasspathSymbolType]");
+        ParserTestHelper.assertParses("!resolve", "SymbolList[IvyClasspathSymbolType]");
+        ParserTestHelper.assertParses("!resolve -s mysettings.xml", "SymbolList[IvyClasspathSymbolType]");
+        ParserTestHelper.assertParses("!resolve -c config1,config2 ivy.xml", "SymbolList[IvyClasspathSymbolType]");
     }
 
     @Test
