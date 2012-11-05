@@ -1,0 +1,38 @@
+!2 Reads ivy.xml and ivysettings.xml to resolve dependencies
+{{{
+!resolve
+}}}
+!resolve
+Shows all 5 dependencies?
+
+!2 Reads ivy.xml and ivysettings.xml to resolve dependencies
+{{{
+!resolve -c default
+}}}
+!resolve -c default
+2 dependencies are shown?
+
+!2 Reads ivy.xml and ivysettings-test.xml to resolve dependencies
+{{{
+!resolve -c default -s ivysettings-test.xml
+}}}
+!resolve -c default -s ivysettings-test.xml
+2 dependencies are shown?
+
+!2 Reads dependencies from a pom file
+{{{
+!resolve -pom pom-test.xml
+}}}
+!resolve -pom pom-test.xml
+
+!2 Reads dependencies from a pom file for a specific configuration
+{{{
+!resolve -pom -c compile pom-test.xml
+}}}
+!resolve -pom -c compile pom-test.xml
+
+!2 This goes bad, obviously
+{{{
+!resolve badfile.xml
+}}}
+!resolve badfile.xml
