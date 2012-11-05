@@ -93,7 +93,7 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
         		.append("\"");
         }
         if (symbol.hasProperty(OptionType.CONFIGURATION.name())) {
-        	buf.append(", configuration \"")
+        	buf.append(" and configuration \"")
     		.append(symbol.getProperty(OptionType.CONFIGURATION.name()))
     		.append("\"");
         }
