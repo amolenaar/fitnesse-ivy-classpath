@@ -1,17 +1,19 @@
 package fitnesse.wikitext.widgets;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.io.File;
 import java.util.List;
 
+import fitnesse.wikitext.parser.VariableSource;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import fitnesse.wikitext.parser.Symbol;
 import fitnesse.wikitext.parser.SymbolProvider;
 import fitnesse.wikitext.test.ParserTestHelper;
+import util.Maybe;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class IvyClasspathSymbolTypeTest {
 
@@ -51,7 +53,7 @@ public class IvyClasspathSymbolTypeTest {
     	//symbol.putProperty(IvyClasspathSymbolType.OptionType.IVYSETTINGS_XML.name(), "ivysettings-test.xml");
 
     	 List<File> classpath = symbolType.getClasspathElements(symbol);
-    	assertEquals(5, classpath.size());
+    	assertEquals(11, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
     	}
@@ -63,7 +65,7 @@ public class IvyClasspathSymbolTypeTest {
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default,test");
 
     	List<File> classpath = symbolType.getClasspathElements(symbol);
-    	assertEquals(5, classpath.size());
+    	assertEquals(11, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
     	}
@@ -75,7 +77,7 @@ public class IvyClasspathSymbolTypeTest {
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.CONFIGURATION.name(), "default");
 
     	List<File> classpath = symbolType.getClasspathElements(symbol);
-    	assertEquals(2, classpath.size());
+    	assertEquals(9, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
     	}
@@ -87,7 +89,7 @@ public class IvyClasspathSymbolTypeTest {
     	symbol.putProperty(IvyClasspathSymbolType.OptionType.IVYSETTINGS_XML.name(), "ivysettings-test.xml");
 
     	List<File> classpath = symbolType.getClasspathElements(symbol);
-    	assertEquals(5, classpath.size());
+    	assertEquals(11, classpath.size());
     	for (File f: classpath) {
     		System.out.println(f.getAbsolutePath());
     	}

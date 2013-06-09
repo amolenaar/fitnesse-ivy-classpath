@@ -30,6 +30,6 @@
 		<dependency org="org.fitnesse" name="fitnesse" rev="latest.release" conf="default" />
 		<dependency org="org.apache.ivy" name="ivy" rev="latest.release" conf="default,standalone->default" transitive="false" />
 		<!-- scope: test -->
-		<dependency org="junit" name="junit" rev="4.10" conf="test->default" />
+		<dependency org="junit" name="junit" rev="4.11" conf="test->default" />
 	</dependencies>
 </ivy-module>

@@ -160,7 +160,7 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
         IvySettings settings = initSettings(ivy, symbol);
         ivy.pushContext();
 
-        String[] confs = new String[] { symbol.getProperty(OptionType.CONFIGURATION.name(), DEFAULT_CONFIGURATION) };
+        String[] confs = symbol.getProperty(OptionType.CONFIGURATION.name(), DEFAULT_CONFIGURATION).split(",");
 
         File ivyfile = new File(settings.substitute(symbol.getProperty(OptionType.DEPENDENCY_FILE.name(), DEFAULT_IVY_XML)));
         if (!ivyfile.exists()) {
