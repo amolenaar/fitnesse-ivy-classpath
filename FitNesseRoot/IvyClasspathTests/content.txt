@@ -2,49 +2,59 @@
 {{{
 !resolve
 }}}
+
 !resolve
-Shows all 5 dependencies?
+Shows all 11 dependencies?
 
 !2 Reads ivy.xml and ivysettings.xml to resolve dependencies
 {{{
-!resolve -c default
+!resolve -c standalone
 }}}
-!resolve -c default
-2 dependencies are shown?
+
+!resolve -c standalone
 
 !2 Reads ivy.xml and ivysettings-test.xml to resolve dependencies
 {{{
 !resolve -c default -s ivysettings-test.xml
 }}}
+
 !resolve -c default -s ivysettings-test.xml
-2 dependencies are shown?
 
 !2 Reads dependencies from a pom file
 {{{
 !resolve -pom pom-test.xml
 }}}
-!resolve -pom pom-test.xml
 
+!resolve -pom pom-test.xml
 !2 Reads dependencies from a pom file for a specific configuration
 {{{
 !resolve -pom -c compile pom-test.xml
 }}}
-!resolve -pom -c compile pom-test.xml
 
+!resolve -pom -c compile pom-test.xml
 !2 This goes bad, obviously
 {{{
 !resolve badfile.xml
 }}}
-!resolve badfile.xml
 
+!resolve badfile.xml
+!2 Using variables
+{{{
+!define IVY_FILE {ivy.xml}
+!resolve !-${IVY_FILE}-!
+}}}
+
+!define IVY_FILE {ivy.xml}
+!resolve ${IVY_FILE}
 !2 A parse error
 {{{
 !resolve -c default -c test
 }}}
-!resolve -c default -c test
 
+!resolve -c default -c test
 !2 A parse error, again
 {{{
 !resolve ivy.xml badfile.xml
 }}}
+
 !resolve ivy.xml badfile.xml
