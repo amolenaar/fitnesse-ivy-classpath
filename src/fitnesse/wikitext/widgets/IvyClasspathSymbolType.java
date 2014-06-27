@@ -1,11 +1,5 @@
 package fitnesse.wikitext.widgets;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import fitnesse.wikitext.parser.*;
 import org.apache.ivy.Ivy;
 import org.apache.ivy.core.module.descriptor.ModuleDescriptor;
@@ -14,8 +8,12 @@ import org.apache.ivy.core.report.ResolveReport;
 import org.apache.ivy.core.resolve.ResolveOptions;
 import org.apache.ivy.core.settings.IvySettings;
 import org.apache.ivy.plugins.parser.m2.PomModuleDescriptorParser;
-
 import util.Maybe;
+
+import java.io.File;
+import java.lang.ref.SoftReference;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>This symbol type adds Ivy support to FitNesse.
@@ -36,6 +34,8 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
     // Properties put on the "current" symbol
     static final String IS_POM_XML = "IS_POM_XML";
     private static final String PARSE_ERROR = "PARSE_ERROR";
+
+    private final Map<String, SoftReference<CacheElement>> cache = new ConcurrentHashMap<String, SoftReference<CacheElement>>();
 
     // OptionType is used to identify child symbols
     enum OptionType {
@@ -169,21 +169,28 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 
         Ivy ivy = Ivy.newInstance();
         initMessage(ivy);
-        IvySettings settings = initSettings(ivy, translator, ivySettingsXml);
-        ivy.pushContext();
+        File settingsFile = initSettings(ivy, translator, ivySettingsXml);
+        File ivyFile = new File(ivy.getSettings().substitute(translator.translate(dependencyFile.getValue())));
+        String configs = translator.translate(configuration.getValue());
 
-        String[] confs = translator.translate(configuration.getValue()).split(",");
+        String cacheKey = createCacheKey(settingsFile, ivyFile, configs);
+        System.out.println("Cache key is: " + cacheKey);
+        if (cache.containsKey(cacheKey)) {
+            CacheElement element = cache.get(cacheKey).get();
+            if (element != null && !element.modified()) {
+                return element.dependencies;
+            }
+        }
 
-        File ivyFile = new File(settings.substitute(translator.translate(dependencyFile.getValue())));
 
         if (!ivyFile.exists()) {
-        	throw new IvyClasspathException("Ivy/pom file not found: " + ivyFile);
+            throw new IvyClasspathException("Ivy/pom file not found: " + ivyFile);
         } else if (ivyFile.isDirectory()) {
-        	throw new IvyClasspathException("Ivy/pom file is not a file: " + ivyFile);
+            throw new IvyClasspathException("Ivy/pom file is not a file: " + ivyFile);
         }
 
         ResolveOptions resolveOptions = new ResolveOptions()
-        		.setConfs(confs)
+        		.setConfs(configs.split(","))
                 .setValidate(true);
         ResolveReport report;
 		try {
@@ -200,23 +207,32 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
         if (report.hasError()) {
             throw new IvyClasspathException(report.getAllProblemMessages());
         } else {
-        	List<File> result = new ArrayList<File>(report.getAllArtifactsReports().length);
+        	List<File> dependencies = new ArrayList<File>(report.getAllArtifactsReports().length);
         	for (ArtifactDownloadReport adr: report.getAllArtifactsReports()) {
-        		result.add(adr.getLocalFile());
+        		dependencies.add(adr.getLocalFile());
         	}
-        	return result;
+
+            cache.put(cacheKey, new SoftReference<CacheElement>(new CacheElement(settingsFile, ivyFile, dependencies)));
+
+            return dependencies;
         }
+    }
+
+    private String createCacheKey(File settingsFile, File ivyFile, String configs) {
+        return (ivyFile != null ? ivyFile.getAbsolutePath() : "**") + "#" +
+                (settingsFile != null ? settingsFile.getAbsolutePath() : "**") + "#" +
+                (configs != null ? configs : "**");
     }
 
     private static void initMessage(Ivy ivy) {
             ivy.getLoggerEngine().pushLogger(new IvyClasspathMessageLogger());
     }
 
-    private static IvySettings initSettings(Ivy ivy, Translator translator, Maybe<Symbol> ivySettingsXml)
+    private static File initSettings(Ivy ivy, Translator translator, Maybe<Symbol> ivySettingsXml)
             throws IvyClasspathException {
         IvySettings settings = ivy.getSettings();
         settings.addAllVariables(System.getProperties());
-
+        File settingsFile = null;
         if (ivySettingsXml.isNothing()) {
         	try {
         		ivy.configureDefault();
@@ -224,18 +240,40 @@ public class IvyClasspathSymbolType extends SymbolType implements Rule, Translat
 				throw new IvyClasspathException("Unable to set default configuration", e);
 			}
         } else {
-            File confFile = new File(translator.translate(ivySettingsXml.getValue()));
-            if (!confFile.exists()) {
-                throw new IvyClasspathException("Ivy configuration file not found: " + confFile);
-            } else if (confFile.isDirectory()) {
-            	throw new IvyClasspathException("Ivy configuration file is not a file: " + confFile);
+            settingsFile = new File(translator.translate(ivySettingsXml.getValue()));
+            if (!settingsFile.exists()) {
+                throw new IvyClasspathException("Ivy configuration file not found: " + settingsFile);
+            } else if (settingsFile.isDirectory()) {
+            	throw new IvyClasspathException("Ivy configuration file is not a file: " + settingsFile);
             }
             try {
-				ivy.configure(confFile);
+				ivy.configure(settingsFile);
 			} catch (Exception e) {
-				throw new IvyClasspathException("Unable to configure ivy with file " + confFile.getAbsolutePath(), e);
+				throw new IvyClasspathException("Unable to configure ivy with file " + settingsFile.getAbsolutePath(), e);
 			}
         }
-        return settings;
+        return settingsFile;
+    }
+
+    private static class CacheElement {
+
+        private final List<File> dependencies;
+        private final File ivyFile;
+        private File settingsFile;
+        private final long ivyFileLastModified;
+        private final long settingsFileLastModified;
+
+        private CacheElement(File settingsFile, File ivyFile, List<File> dependencies) {
+            this.dependencies = dependencies;
+            this.ivyFile = ivyFile;
+            this.settingsFile = settingsFile;
+            this.ivyFileLastModified = ivyFile.lastModified();
+            this.settingsFileLastModified = settingsFile != null ? settingsFile.lastModified() : 0;
+        }
+
+        private boolean modified() {
+            return (ivyFile.lastModified() != ivyFileLastModified) &&
+                    (settingsFile == null || settingsFile.lastModified() != settingsFileLastModified);
+        }
     }
 }

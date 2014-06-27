@@ -3,15 +3,20 @@ package fitnesse.wikitext.widgets;
 import java.io.File;
 import java.util.List;
 
+import fitnesse.wiki.PageData;
+import fitnesse.wiki.PathParser;
+import fitnesse.wiki.WikiPage;
+import fitnesse.wiki.WikiPageUtil;
+import fitnesse.wiki.mem.InMemoryPage;
 import fitnesse.wikitext.parser.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fitnesse.wikitext.test.ParserTestHelper;
 import util.Maybe;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class IvyClasspathSymbolTypeTest {
 
@@ -45,9 +50,9 @@ public class IvyClasspathSymbolTypeTest {
 
     @Test
     public void parsesIvy() throws Exception {
-        ParserTestHelper.assertParses("!resolve", "SymbolList[IvyClasspathSymbolType]");
-        ParserTestHelper.assertParses("!resolve -s mysettings.xml", "SymbolList[IvyClasspathSymbolType[Text]]");
-        ParserTestHelper.assertParses("!resolve -c config1,config2 ivy.xml", "SymbolList[IvyClasspathSymbolType[Text, Comma, Text, Text]]");
+        assertParses("!resolve", "SymbolList[IvyClasspathSymbolType]");
+        assertParses("!resolve -s mysettings.xml", "SymbolList[IvyClasspathSymbolType[Text]]");
+        assertParses("!resolve -c config1,config2 ivy.xml", "SymbolList[IvyClasspathSymbolType[Text, Comma, Text, Text]]");
     }
 
     @Test
@@ -145,7 +150,7 @@ public class IvyClasspathSymbolTypeTest {
     @Test
     public void loadIvyXml() throws Exception {
         String pageContents = "!resolve ivy.xml\n";
-        String html = ParserTestHelper.translateToHtml(null, pageContents, mockVariableSource);
+        String html = translateToHtml(null, pageContents, mockVariableSource);
         assertTrue(html, html.startsWith("<p class='meta'>Classpath from \"ivy.xml\" and configuration \"*\":</p>"));
     }
 
@@ -160,7 +165,7 @@ public class IvyClasspathSymbolTypeTest {
                 return new Maybe<String>("ivy.xml");
             }
         };
-        String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
+        String html = translateToHtml(null, pageContents, variableSource);
         assertTrue(html, html.startsWith("<p class='meta'>Classpath from \"ivy.xml\", with settings file \"ivysettings.xml\" and configuration \"config1\":</p>"));
     }
 
@@ -175,11 +180,73 @@ public class IvyClasspathSymbolTypeTest {
                 return new Maybe<String>("ivy.xml");
             }
         };
-        String html = ParserTestHelper.translateToHtml(null, pageContents, variableSource);
+        String html = translateToHtml(null, pageContents, variableSource);
         assertTrue(html, html.startsWith("<p class='meta'>Classpath from \"ivy.xml\", with settings file \"ivysettings.xml\" and configuration \"default\":</p>"));
     }
 
     private Symbol optionSymbol(IvyClasspathSymbolType.OptionType configuration, String value) {
         return new Symbol(SymbolType.Text, value).putProperty(configuration.name(), "");
     }
+
+    // Test code lend from fitnesse.wikitext.parser.ParserTestHelper
+    public static String translateToHtml(WikiPage page, String input, VariableSource variableSource) {
+        Symbol list = Parser.make(new ParsingPage(new WikiSourcePage(page), variableSource), input, SymbolProvider.wikiParsingProvider).parse();
+        return new HtmlTranslator(new WikiSourcePage(page), new ParsingPage(new WikiSourcePage(page))).translateTree(list);
+    }
+
+    public static void assertParses(String input, String expected) throws Exception {
+        WikiPage page = new TestRoot().makePage("TestPage", input);
+        Symbol result = parse(page, input);
+        assertEquals(expected, serialize(result));
+    }
+
+    public static Symbol parse(WikiPage page, String input) {
+        return Parser.make(new ParsingPage(new WikiSourcePage(page)), input).parse();
+    }
+
+    public static String serialize(Symbol symbol) {
+        StringBuilder result = new StringBuilder();
+        result.append(symbol.getType() != null ? symbol.getType().toString() : "?no type?");
+        int i = 0;
+        for (Symbol child : symbol.getChildren()) {
+            result.append(i == 0 ? "[" : ", ");
+            result.append(serialize(child));
+            i++;
+        }
+        if (i > 0) result.append("]");
+        return result.toString();
+    }
+
+    public static class TestRoot {
+        public WikiPage root;
+
+        public TestRoot() {
+            root = InMemoryPage.makeRoot("root");
+        }
+
+        public WikiPage makePage(String pageName) {
+            return makePage(root, pageName);
+        }
+
+        public WikiPage makePage(WikiPage parent, String pageName) {
+            return WikiPageUtil.addPage(parent, PathParser.parse(pageName), "");
+        }
+
+        public WikiPage makePage(String pageName, String content) {
+            return makePage(root, pageName, content);
+        }
+
+        public WikiPage makePage(WikiPage parent, String pageName, String content) {
+            WikiPage page = makePage(parent, pageName);
+            setPageData(page, content);
+            return page;
+        }
+
+        public void setPageData(WikiPage page, String content) {
+            PageData data = page.getData();
+            data.setContent(content);
+            page.commit(data);
+        }
+    }
+
 }

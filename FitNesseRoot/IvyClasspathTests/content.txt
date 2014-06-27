@@ -40,19 +40,19 @@ Shows all 11 dependencies?
 !resolve badfile.xml
 !2 Using variables
 {{{
-!define IVY_FILE {ivy.xml}
-!resolve !-${IVY_FILE}-!
+!define IVY_FILE {pom-test.xml}
+!resolve -pom !-${IVY_FILE}-!
 }}}
 
-!define IVY_FILE {ivy.xml}
-!resolve ${IVY_FILE}
-!2 A parse error
+!define IVY_FILE {pom-test.xml}
+!resolve -pom ${IVY_FILE}
+!2 Not really okay, but we can deal with it
 {{{
 !resolve -c default -c test
 }}}
 
 !resolve -c default -c test
-!2 A parse error, again
+!2 Not really okay, but we can deal with it, again
 {{{
 !resolve ivy.xml badfile.xml
 }}}
